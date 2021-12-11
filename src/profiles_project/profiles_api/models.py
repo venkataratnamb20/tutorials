@@ -32,7 +32,7 @@ class UserProfileManager(BaseUserManager):
 
 
 
-class UserProfile(AbstractBaseUser, PendingDeprecationWarning):
+class UserProfile(AbstractBaseUser):
     """User profile in the system"""
     email = models.EmailField(max_length=255, unique=True)
     firstname = models.CharField(max_length=255)
@@ -43,7 +43,7 @@ class UserProfile(AbstractBaseUser, PendingDeprecationWarning):
     objects = UserProfileManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['firstname']
+    REQUIRED_FIELDS = ['firstname', 'lastname']
 
     def get_full_name(self):
         """Used to get the user full name"""
@@ -52,6 +52,12 @@ class UserProfile(AbstractBaseUser, PendingDeprecationWarning):
     def get_short_name(self):
         """Used to get User short name"""
         return self.firstname
+    
+    def has_perm(self, perm, obj=None):
+        return self.is_staff
+
+    def has_module_perms(self, app_label):
+        return self.is_staff
 
     def __str__(self):
         """Django uses this when it needs to convert an object to a string"""
