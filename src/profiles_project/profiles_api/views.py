@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from rest_framework.decorators import authentication_classes
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
@@ -6,7 +7,8 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework import filters
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.authtoken.views import ObtainAuthToken
-
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from . import serializers
 from . import models
 from . import permissions
@@ -113,3 +115,18 @@ class LoginViewSet(viewsets.ViewSet):
         """Use the ObtainAuthToken to validate and create token"""
         return ObtainAuthToken().as_view()(request=request._request)
         # return ObtainAuthToken().post(request)
+
+class UserProfileFeedViewSet(viewsets.ModelViewSet):
+    """handles creating, updating and reading profile feed items."""
+
+    authentication_classes = (TokenAuthentication, )
+    serializer_class = serializers.ProfileFeedItemSerializer
+    queryset = models.ProfileFeedItem.objects.all()
+    permission_classes = (permissions.PostOwnStatus, IsAuthenticated)     # Only loggedin users can see feeds
+    # permission_classes = (permissions.PostOwnStatus, IsAuthenticatedOrReadOnly)   # All can see but authenticated can update or create
+
+    def perform_create(self, serializer):
+        """Set the user profile to the logedin user"""
+
+        serializer.save(user_profile=self.request.user)
+
